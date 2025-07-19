@@ -43,7 +43,7 @@ FlyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 
 SpeedSlider.Size = UDim2.new(1, 0, 0, 30)
 SpeedSlider.Position = UDim2.new(0, 0, 0, 165)
-SpeedSlider.Text = "Velocidad: 50"
+SpeedSlider.Text = "Velocidad: 16"
 SpeedSlider.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 SpeedSlider.TextColor3 = Color3.fromRGB(255, 255, 0)
 
@@ -59,6 +59,10 @@ local stealEnabled = false
 local flying = false
 local flySpeed = 50
 local drawings = {}
+
+-- ** NUEVO **
+local walkSpeeds = {16, 50, 75, 100, 150, 200} -- velocidades para caminar
+local currentSpeedIndex = 1
 
 -- Noclip
 NoclipBtn.MouseButton1Click:Connect(function()
@@ -162,9 +166,19 @@ FlyBtn.MouseButton1Click:Connect(function()
 end)
 
 SpeedSlider.MouseButton1Click:Connect(function()
-    flySpeed = flySpeed + 25
-    if flySpeed > 200 then flySpeed = 25 end
-    SpeedSlider.Text = "Velocidad: " .. tostring(flySpeed)
+    currentSpeedIndex = currentSpeedIndex + 1
+    if currentSpeedIndex > #walkSpeeds then
+        currentSpeedIndex = 1
+    end
+    local newSpeed = walkSpeeds[currentSpeedIndex]
+    SpeedSlider.Text = "Velocidad: " .. tostring(newSpeed)
+
+    if LocalPlayer.Character then
+        local humanoid = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+        if humanoid then
+            humanoid.WalkSpeed = newSpeed
+        end
+    end
 end)
 
 RunService.RenderStepped:Connect(function()
@@ -173,6 +187,16 @@ RunService.RenderStepped:Connect(function()
         local humanoid = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
         if (humanoid and humanoid.Jump) or UserInputService:IsKeyDown(Enum.KeyCode.Space) then
             hrp.Velocity = Vector3.new(hrp.Velocity.X, flySpeed, hrp.Velocity.Z)
+        end
+    end
+end)
+
+-- ** NUEVO ** Mantener velocidad establecida, evitar reset externo
+RunService.Heartbeat:Connect(function()
+    if LocalPlayer.Character then
+        local humanoid = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+        if humanoid then
+            humanoid.WalkSpeed = walkSpeeds[currentSpeedIndex]
         end
     end
 end)
